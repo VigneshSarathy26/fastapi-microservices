@@ -1,0 +1,15 @@
+name: deployment
+
+on: 
+  push:
+    branches:
+      - main # main branch name
+      - stage
+      - test
+      - dev
+
+jobs:
+  deployment:
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/checkout@v4
