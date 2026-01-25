@@ -4,11 +4,9 @@ from contextlib import asynccontextmanager
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 
+# Create a single client instance to be reused
 redis_client = redis.from_url(REDIS_URL, decode_responses=True)
 
-@asynccontextmanager
 async def get_redis():
-    try:
-        yield redis_client
-    finally:
-        pass  # Connection pooled
+    # Simple dependency injection pattern
+    return redis_client
