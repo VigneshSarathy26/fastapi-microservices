@@ -16,3 +16,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Install Requirements
         run: pip install -r requirements.txt
+        working-directory: ./app
+      - name: Run Tests
+        run: pytest
+        working-directory: ./app
+        
