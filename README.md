@@ -47,6 +47,12 @@ pip install -r requirements-test.txt
 pytest -q
 ```
 
+Run linter:
+
+```bash
+pylint --recursive=y .
+```
+
 Run specific suites:
 
 - Unit tests: `pytest tests/test_unit -q`
