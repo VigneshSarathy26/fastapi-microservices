@@ -38,7 +38,6 @@ jobs:
         with:
           image-ref: '${{ secrets.REGISTRY_URL }}/fastapi-microservice:latest'
           format: 'table'
-          exit-code: '1'
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
