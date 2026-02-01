@@ -30,5 +30,15 @@ jobs:
         with:
           context: ./app/
           file: ./app/Dockerfile
-          push: true
+          push: false
           tags: ${{ secrets.REGISTRY_URL }}/fastapi-microservice:latest
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: '${{ secrets.REGISTRY_URL }}/fastapi-microservice:latest'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
