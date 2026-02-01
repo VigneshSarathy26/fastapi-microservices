@@ -28,7 +28,7 @@ jobs:
       - name: Build and push Docker image with scan
         uses: docker/build-push-action@v4
         with:
-          context: app/
+          context: ./app
           file: Dockerfile
           push: true
           tags: ${{ secrets.REGISTRY_URL }}/fastapi-microservice:latest
