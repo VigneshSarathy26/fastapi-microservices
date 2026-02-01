@@ -1,39 +1,33 @@
-name: Building Docker Image
+name: docker build scan push
 
 on:
   push:
-    branches:
-      - main
-      - stage
-      - test
-      - dev
-
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: fastapi
+   branches:
+   - main
+   - stage
+   - test
+   - dev
 
 jobs:
-  Build:
+  build-and-scan:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
     steps:
-      - uses: actions/checkout@v4
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Build and push
-        uses: docker/build-push-action@v6
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
         with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image with scan
+        uses: docker/build-push-action@v4
+        with:
+          context: .
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.run_number }}
-          context: ./app
-        
+          tags: your-dockerhub-username/your-repo-name:latest
+          scan: true

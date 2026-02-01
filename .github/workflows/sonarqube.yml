@@ -17,13 +17,17 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - name: Scaning....
+      - name: Scanning....
         uses: sonarsource/sonarqube-scan-action@master
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_1 }}  # analysis token associated to your project
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}  # analysis token associated to your project
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         with:
-          projectBaseDir: PROJECT1_PATH/ # the path to your project from the monorepo root directory
+          projectBaseDir: . # the path to your project from the monorepo root directory
+          args: >
+            -Dsonar.projectKey=fastapi-microservice
+            -Dsonar.projectName=fastapi-microservice
+            -Dsonar.sources=app
       # If you wish to fail your job when the Quality Gate is red, uncomment the
       # following lines. This would typically be used to fail a deployment.
       # We do not recommend to use this in a pull request. Prefer using pull request
@@ -32,5 +36,5 @@ jobs:
         uses: sonarsource/sonarqube-quality-gate-action@master
         timeout-minutes: 5
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_1 }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
    

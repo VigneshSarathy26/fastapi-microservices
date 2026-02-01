@@ -1,0 +1,30 @@
+trigger:
+  branches:
+    include: ['main', 'master', 'develop']
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  PYTHON_VERSION: '3.11'
+
+steps:
+- checkout: self
+
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '$(PYTHON_VERSION)'
+
+- script: |
+    python -m pip install --upgrade pip
+    pip install -r app/requirements.txt
+    pip install -r app/requirements-test.txt || true
+  displayName: 'Install dependencies'
+
+- script: |
+    pytest -q
+  displayName: 'Run all tests'
+
+- script: |
+    pytest -q -k "test_e2e"
+  displayName: 'Run e2e tests (smoke)'

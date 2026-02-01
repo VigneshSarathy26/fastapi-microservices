@@ -8,7 +8,6 @@ os.environ["DATABASE_URL"] = "sqlite:///./test.db"
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-import fakeredis.aioredis
 import pytest_asyncio # Make sure this is installed
 
 # Imports from your app must come AFTER setting the env var
@@ -63,20 +62,38 @@ def override_get_db(session):
 @pytest_asyncio.fixture(scope="function")
 async def mock_redis():
     """
-    Async fakeredis mock for Redis dependency.
+    Simple async in-memory fake Redis for testing.
+    This avoids compatibility issues with redis/fakeredis async internals.
     """
-    fake_redis = fakeredis.aioredis.FakeRedis(decode_responses=True)
-    
+    class SimpleFakeRedis:
+        def __init__(self):
+            self._store = {}
+
+        async def get(self, key):
+            return self._store.get(key)
+
+        async def set(self, key, value):
+            self._store[key] = value
+
+        async def setex(self, key, seconds, value):
+            self._store[key] = value
+
+        async def aclose(self):
+            # No-op for compatibility
+            pass
+
+    fake_redis = SimpleFakeRedis()
+
     # Define an async override to match the async nature of Redis interaction
     async def _override_get_redis():
         return fake_redis
-    
+
     app.dependency_overrides[get_redis] = _override_get_redis
     yield fake_redis
-    
+
     # Cleanup
     app.dependency_overrides.pop(get_redis, None)
-    await fake_redis.close()
+    await fake_redis.aclose()
 
 @pytest.fixture(autouse=True)
 def setup_overrides(override_get_db, mock_redis):
