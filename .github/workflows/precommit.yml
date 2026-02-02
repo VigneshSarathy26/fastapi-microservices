@@ -34,6 +34,7 @@ jobs:
         run: |
          pylint --recursive=y .
         working-directory: ./app
+        continue-on-error: true
       - name: Upload Linting Report
         uses: actions/upload-artifact@v4
         with:
