@@ -20,5 +20,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Secret Scanner
+        uses: github/codeql-action/init@v2
+        with:
+          languages: 'all'
+      - name: Perform secret scanning
+        uses: github/codeql-action/analyze@v2
+        with:
+          category: 'secret-scanning'
+
 
        
