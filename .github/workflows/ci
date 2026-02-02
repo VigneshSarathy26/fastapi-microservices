@@ -9,7 +9,7 @@ on:
    - dev
 
 jobs:
-  build-and-scan:
+  build-scan-push:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -31,13 +31,18 @@ jobs:
           context: ./app/
           file: ./app/Dockerfile
           push: false
-          tags: ${{ secrets.REGISTRY_URL }}/fastapi-microservice:latest
+          tags: ${{ secrets.REGISTRY_URL }}/fastapi-microservice:dev-${{ github.sha }}
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.33.1
         with:
-          image-ref: '${{ secrets.REGISTRY_URL }}/fastapi-microservice:latest'
+          image-ref: '${{ secrets.REGISTRY_URL }}/fastapi-microservice:dev-${{ github.sha }}'
           format: 'table'
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
+        
+      - name: Push Docker image if scan passes
+        if: success()
+        run: |
+          docker push ${{ secrets.REGISTRY_URL }}/fastapi-microservice:dev-${{ github.sha }}

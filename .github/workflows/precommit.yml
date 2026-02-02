@@ -1,44 +1,56 @@
-name: testing
-
+name: Precommit Checks
 on:
   push:
-   branches:
-   - main
-   - stage
-   - test
-   - dev
+    branches:
+      - main
+      - dev
+      - test
+      - stage
   pull_request:
-    types: [opened, synchronize, reopened]
+    branches:
+      - main
+      - dev
+      - test
+      - stage
     
 jobs:
+  linting:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: Linting
+        run: |
+         pylint --recursive=y .
+        working-directory: ./app
+      - name: Upload Linting Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: linting-report
+          path: ./app/linting-report.txt
   unit-tests:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
         uses: actions/checkout@v4
-
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-
       - name: Install Requirements
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements-test.txt || true
         working-directory: ./app
-
       - name: Run Unit Tests
         run: pytest -q --junitxml=reports/junit-unit.xml --cov=app --cov-report=xml:reports/coverage-unit.xml tests/test_unit
         working-directory: ./app
-
       - name: Upload Test Reports
         uses: actions/upload-artifact@v4
         with:
           name: unit-test-reports
           path: app/reports/*.xml
-
   integration-tests:
     runs-on: ubuntu-latest
     needs: unit-tests
@@ -50,21 +62,43 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-
       - name: Install Requirements
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements-test.txt || true
         working-directory: ./app
-
       - name: Run Integration Tests
         run: pytest -q --junitxml=reports/junit-integration.xml --cov=app --cov-report=xml:reports/coverage-integration.xml tests/test_integration
         working-directory: ./app
-
       - name: Upload Test Reports
         uses: actions/upload-artifact@v4
         with:
           name: integration-test-reports
           path: app/reports/*.xml
-        
+  SonarQube:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: Scanning....
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}  # analysis token associated to your project
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          projectBaseDir: . # the path to your project from the monorepo root directory
+          args: >
+            -Dsonar.projectKey=fastapi-microservice
+            -Dsonar.projectName=fastapi-microservice
+            -Dsonar.sources=app
+      # If you wish to fail your job when the Quality Gate is red, uncomment the
+      # following lines. This would typically be used to fail a deployment.
+      # We do not recommend to use this in a pull request. Prefer using pull request
+      # decoration instead.
+      - name: Quality Gate
+        uses: sonarsource/sonarqube-quality-gate-action@master
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
