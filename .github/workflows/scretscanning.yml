@@ -21,6 +21,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Secret Scanner
-        uses: secret-scanner/action@0.0.2
+        uses: github/codeql-action/init@v2
+        with:
+          languages: 'all'
+      - name: Perform secret scanning
+        uses: github/codeql-action/analyze@v2
+        with:
+          category: 'secret-scanning'
+      - name: Upload Secret Scanning Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: secret-scanning-results
+          path: .
+          if-no-files-found: warn
 
        
