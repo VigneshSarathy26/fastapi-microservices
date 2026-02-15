@@ -5,12 +5,13 @@ on:
       - dev
       - test
       - stage
+      - main
   pull_request:
     branches:
       - dev
       - test
       - stage
-    
+      - main
 jobs:
   linting:
     runs-on: ubuntu-latest
