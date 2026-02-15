@@ -4,7 +4,11 @@ on:
     workflows: ["codequality"] 
     types: 
       - completed
-
+    branches:
+      - main
+      - dev
+      - test
+      - stage
 jobs:
   build-scan-push:
     runs-on: ubuntu-latest
