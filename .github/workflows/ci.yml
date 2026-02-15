@@ -1,12 +1,14 @@
 name: docker build scan push
 
 on:
-  push:
-   branches:
-   - main
-   - stage
-   - test
-   - dev
+  workflow_run:
+    workflows: ["Precommit Checks"]
+    types: [completed]
+    branches:
+      - main
+      - dev
+      - test
+      - stage
 
 jobs:
   build-scan-push:
