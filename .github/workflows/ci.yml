@@ -1,7 +1,7 @@
 name: Build
 on:
   workflow_run:
-    workflows: ["codequality"]
+    workflows: ["name: codequality"]
     types:
       - completed
     branches:
