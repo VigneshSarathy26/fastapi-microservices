@@ -1,11 +1,13 @@
-name: deployment to ${{ github.ref_name }}
+name: deployment
 on:
-  push:
+  workflow_run:
+    workflows: ["Build"]
+    types:
+      - completed
     branches:
+      - dev
       - stage
       - test
-      - dev
-      - main
 
 jobs:
   deploy:

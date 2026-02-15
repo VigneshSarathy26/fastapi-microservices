@@ -2,13 +2,11 @@ name: codequality
 on:
   push:
     branches:
-      - main
       - dev
       - test
       - stage
   pull_request:
     branches:
-      - main
       - dev
       - test
       - stage

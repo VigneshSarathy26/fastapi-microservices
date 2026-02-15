@@ -1,11 +1,13 @@
-name: docker build scan push
+name: Build
 on:
   workflow_run:
     workflows: ["codequality"]
     types:
       - completed
     branches:
-      - main
+      - dev
+      - stage
+      - test
 
 jobs:
   build-scan-push:
