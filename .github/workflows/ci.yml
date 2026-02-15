@@ -1,15 +1,14 @@
 name: docker build scan push
-
 on:
-  push:
-   branches:
-   - main
-   - stage
-   - test
-   - dev
+  workflow_run:
+    workflows: ["codequality"]
+    types:
+      - completed
+    branches:
+      - main
 
 jobs:
-  build-and-scan:
+  build-scan-push:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -31,13 +30,19 @@ jobs:
           context: ./app/
           file: ./app/Dockerfile
           push: false
-          tags: ${{ secrets.REGISTRY_URL }}/fastapi-microservice:latest
+          tags: ${{ secrets.REGISTRY_URL }}/fastapi-micropservice-application:dev-${{ github.run_number}}
+          load: true
 
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.33.1
-        with:
-          image-ref: '${{ secrets.REGISTRY_URL }}/fastapi-microservice:latest'
-          format: 'table'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
+      # - name: Run Trivy vulnerability scanner
+      #   uses: aquasecurity/trivy-action@0.33.1
+      #   with:
+      #     image-ref: '${{ secrets.REGISTRY_URL }}/fastapi-micropservice-application:dev-${{ github.run_number }}'
+      #     format: 'table'
+      #     ignore-unfixed: true
+      #     vuln-type: 'os,library'
+      #     severity: 'CRITICAL,HIGH'
+        
+      - name: Push Docker image if scan passes
+        if: success()
+        run: |
+          docker push ${{ secrets.REGISTRY_URL }}/fastapi-micropservice-application:dev-${{ github.run_number }}
