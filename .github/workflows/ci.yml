@@ -2,8 +2,8 @@ name: docker build scan push
 
 on:
   workflow_run:
-    workflows: ["Precommit Checks"]
-    types: [completed]
+    workflows: ["name: Precommit"] # Make sure to update this to match the name of your precommit workflow
+    types: [requested]
     branches:
       - main
       - dev

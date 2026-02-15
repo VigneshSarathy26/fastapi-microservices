@@ -1,4 +1,4 @@
-name: Precommit Checks
+name: Precommit
 on:
   push:
     branches:
