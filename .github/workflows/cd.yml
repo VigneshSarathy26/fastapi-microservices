@@ -8,6 +8,7 @@ on:
       - dev
       - stage
       - test
+      - main
 
 jobs:
   deploy:
