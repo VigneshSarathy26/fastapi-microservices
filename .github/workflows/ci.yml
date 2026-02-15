@@ -1,8 +1,9 @@
 name: docker build scan push
 on:
   workflow_run:
-    workflows: ["Precommit"] 
-    types: [completed]
+    workflows: ["codequality"] 
+    types: 
+      - completed
 
 jobs:
   build-scan-push:
