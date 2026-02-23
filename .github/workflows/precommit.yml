@@ -12,6 +12,7 @@ on:
       - test
       - stage
       - main
+  workflow_dispatch:
 jobs:
   linting:
     runs-on: ubuntu-latest
