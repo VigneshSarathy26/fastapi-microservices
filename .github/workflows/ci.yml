@@ -6,9 +6,6 @@ on:
       - completed
     branches:
       - dev
-      - stage
-      - test
-      - main
 
 jobs:
   build-scan-push:
