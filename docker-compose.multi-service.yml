@@ -1,0 +1,231 @@
+version: '3.8'
+
+services:
+  # Keycloak Identity & Access Management
+  keycloak:
+    image: keycloak/keycloak:latest
+    container_name: keycloak_sso
+    ports:
+      - "8080:8080"
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://keycloak_postgres:5432/keycloak
+      - KC_DB_USERNAME=postgres
+      - KC_DB_PASSWORD=postgres
+    depends_on:
+      keycloak_postgres:
+        condition: service_healthy
+    networks:
+      - microservices
+    command: start-dev
+
+  keycloak_postgres:
+    image: postgres:15-alpine
+    container_name: keycloak_postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=keycloak
+    ports:
+      - "5435:5432"
+    volumes:
+      - keycloak_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - microservices
+
+  # Frontend UI
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: http://localhost
+        VITE_KEYCLOAK_URL: http://localhost:8080
+        VITE_KEYCLOAK_REALM: microservices
+        VITE_KEYCLOAK_CLIENT_ID: microservices-app
+    container_name: microservices_ui
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_BASE_URL=http://localhost
+      - VITE_KEYCLOAK_URL=http://localhost:8080
+      - VITE_KEYCLOAK_REALM=microservices
+      - VITE_KEYCLOAK_CLIENT_ID=microservices-app
+    depends_on:
+      - users_service
+      - products_service
+      - orders_service
+      - keycloak
+    networks:
+      - microservices
+
+  # Users Microservice
+  users_service:
+    build:
+      context: .
+      dockerfile: ./app/Dockerfile.users
+    container_name: users_app
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres_users:5432/users_db
+      - REDIS_URL=redis://redis_users:6379
+      - KEYCLOAK_URL=http://keycloak:8080
+      - KEYCLOAK_REALM=microservices
+      - KEYCLOAK_CLIENT_ID=microservices-app
+    depends_on:
+      postgres_users:
+        condition: service_healthy
+      redis_users:
+        condition: service_started
+    networks:
+      - microservices
+
+  postgres_users:
+    image: postgres:15-alpine
+    container_name: postgres_users
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=users_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_users_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - microservices
+
+  redis_users:
+    image: redis:7-alpine
+    container_name: redis_users
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - microservices
+
+  # Products Microservice
+  products_service:
+    build:
+      context: .
+      dockerfile: ./products/Dockerfile.products
+    container_name: products_app
+    ports:
+      - "8001:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres_products:5432/products_db
+      - REDIS_URL=redis://redis_products:6379
+      - KEYCLOAK_URL=http://keycloak:8080
+      - KEYCLOAK_REALM=microservices
+      - KEYCLOAK_CLIENT_ID=microservices-app
+    depends_on:
+      postgres_products:
+        condition: service_healthy
+      redis_products:
+        condition: service_started
+    networks:
+      - microservices
+
+  postgres_products:
+    image: postgres:15-alpine
+    container_name: postgres_products
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=products_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_products_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - microservices
+
+  redis_products:
+    image: redis:7-alpine
+    container_name: redis_products
+    restart: always
+    ports:
+      - "6380:6379"
+    networks:
+      - microservices
+
+  # Orders Microservice
+  orders_service:
+    build:
+      context: .
+      dockerfile: ./orders/Dockerfile.orders
+    container_name: orders_app
+    ports:
+      - "8002:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres_orders:5432/orders_db
+      - REDIS_URL=redis://redis_orders:6379
+      - KEYCLOAK_URL=http://keycloak:8080
+      - KEYCLOAK_REALM=microservices
+      - KEYCLOAK_CLIENT_ID=microservices-app
+    depends_on:
+      postgres_orders:
+        condition: service_healthy
+      redis_orders:
+        condition: service_started
+    networks:
+      - microservices
+
+  postgres_orders:
+    image: postgres:15-alpine
+    container_name: postgres_orders
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=orders_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_orders_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - microservices
+
+  redis_orders:
+    image: redis:7-alpine
+    container_name: redis_orders
+    restart: always
+    ports:
+      - "6381:6379"
+    networks:
+      - microservices
+
+volumes:
+  postgres_users_data:
+  postgres_products_data:
+  postgres_orders_data:
+  keycloak_postgres_data:
+
+networks:
+  microservices:
+    driver: bridge

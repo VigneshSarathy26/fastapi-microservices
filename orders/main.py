@@ -1,13 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app import models
-from app.database import engine
-from app.v1.users import router as users_router
+from orders import models
+from orders.database import engine
+from orders.api.v1.orders import router as orders_router
 
 # Create tables
 models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="User Microservice")
+app = FastAPI(title="Order Microservice")
 
 # Add CORS middleware
 app.add_middleware(
@@ -23,13 +23,13 @@ def root():
     """Health check and API info"""
     return {
         "status": "healthy",
-        "service": "User Microservice",
+        "service": "Order Microservice",
         "version": "1.0.0",
         "endpoints": {
             "health": "/",
-            "users": "/api/v1/users",
+            "orders": "/api/v1/orders",
             "docs": "/docs"
         }
     }
 
-app.include_router(users_router, prefix="/api/v1/users", tags=["users"])
+app.include_router(orders_router, prefix="/api/v1/orders", tags=["orders"])
