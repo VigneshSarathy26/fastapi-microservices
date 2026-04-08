@@ -1,0 +1,14 @@
+name: Scan using CodeQL 
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  codeql:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        
